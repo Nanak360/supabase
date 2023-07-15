@@ -1,4 +1,4 @@
-import { GoTrueClient } from '@supabase/gotrue-js'
+import { GoTrueClient, navigatorLock } from '@supabase/gotrue-js'
 
 export const STORAGE_KEY = process.env.NEXT_PUBLIC_STORAGE_KEY || 'supabase.dashboard.auth.token'
 export const AUTH_DEBUG_KEY =
@@ -33,10 +33,29 @@ if (debug) {
   }
 }
 
+let previousOperation: Promise<any> = Promise.resolve()
+
+export async function lockTab<R>(
+  name: string,
+  acquireTimeout: number,
+  fn: () => Promise<R>
+): Promise<R> {
+  try {
+    await previousOperation
+  } catch (e: any) {
+    // not important
+  }
+
+  previousOperation = fn
+
+  return await previousOperation
+}
+
 export const gotrueClient = new GoTrueClient({
   url: process.env.NEXT_PUBLIC_GOTRUE_URL,
   storageKey: STORAGE_KEY,
   detectSessionInUrl: true,
   debug,
   fetch: customFetch,
+  lock: globalThis.navigator && globalThis.navigator.locks ? navigatorLock : null,
 })
