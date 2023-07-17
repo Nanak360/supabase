@@ -16,17 +16,27 @@ import { useInfraMonitoringQuery } from 'data/analytics/infra-monitoring-query'
 import { useProjectAddonsQuery } from 'data/subscriptions/project-addons-query'
 import { useFlag } from 'hooks'
 import { BASE_PATH } from 'lib/constants'
-import { useSubscriptionPageStateSnapshot } from 'state/subscription-page'
+import { SUBSCRIPTION_PANEL_KEYS, useSubscriptionPageStateSnapshot } from 'state/subscription-page'
 import { Alert, Button, IconChevronRight, IconExternalLink } from 'ui'
 import { ComputeInstanceSidePanel, CustomDomainSidePanel, PITRSidePanel } from './'
 import { GenericSkeletonLoader } from 'components/ui/ShimmeringLoader'
 import AlertError from 'components/ui/AlertError'
+import { useRouter } from 'next/router'
 
 const Addons = () => {
   const { isDarkMode } = useTheme()
   const { ref: projectRef } = useParams()
   const snap = useSubscriptionPageStateSnapshot()
   const projectUpdateDisabled = useFlag('disableProjectCreationAndUpdate')
+  const router = useRouter()
+
+  const panel = router.query.panel
+
+  const allowedValues = ['computeInstance', 'pitr', 'customDomain']
+
+  if (panel && typeof panel === 'string' && allowedValues.includes(panel)) {
+    snap.setPanelKey(panel as SUBSCRIPTION_PANEL_KEYS)
+  }
 
   // [Joshen] We could possibly look into reducing the interval to be more "realtime"
   // I tried setting the interval to 1m but no data was returned, may need to experiment
